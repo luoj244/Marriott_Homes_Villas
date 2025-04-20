@@ -69,9 +69,22 @@ map.on("pointermove", function (e) {
 // find recommendations based on type
 function findRecommendations(type) {
   let filteredPlaces = filterPlacesByType(type);
+
   if (filteredPlaces) {
-    populateRecommendationCards(filteredPlaces);
-    filteredPlaces.forEach((place) => {
+    // Limit to 8 places max
+    const limitedPlaces = filteredPlaces.slice(0, 8);
+
+    // Update cards and pins
+    populateRecommendationCards(limitedPlaces);
+
+    // Clear old pins
+    vectorSource.clear();
+
+    // Clear and refill mega menu
+    _megaMenuCol1.innerHTML = "";
+    _megaMenuCol2.innerHTML = "";
+
+    limitedPlaces.forEach((place) => {
       addPlaceToMegaMenu(place);
       addMarkerToMap(place);
     });
@@ -79,6 +92,7 @@ function findRecommendations(type) {
     console.log("filterPlacesByType function error");
   }
 }
+
 
 const popup = new ol.Overlay({
   element: document.getElementById("popup"),
