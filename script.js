@@ -40,6 +40,63 @@ function createCard(place, map) {
       showPopupForPlace(place); //Show picture after after it zooms into the area
     });
   });
+  // Step 5: Add a click event listener to the search button
+  document.getElementById("search-homes-button").addEventListener("click", () => {
+    const query = document.getElementById("destination").value.trim().toLowerCase();
+  
+    if (!query) return;
+  
+    const foundPlace = PLACES.find((place) => place.name.toLowerCase() === query);
+  
+    if (foundPlace) {
+      // Check if the current recommendations match the searched place's type
+      const currentType = document.querySelector(".swal-button--confirm")?.innerText.toLowerCase(); // fallback if not set
+  
+      // If the type doesn't match the current filter or this is first time loading
+      if (currentType !== foundPlace.type) {
+        // Update recommendation cards, map pins, and menu
+        findRecommendations(foundPlace.type);
+      }
+  
+      // Scroll to map
+      document.getElementById("map").scrollIntoView({ behavior: "smooth" });
+  
+      // Add marker if not already present
+      const features = vectorSource.getFeatures();
+      const alreadyExists = features.some((feature) => feature.get("name") === foundPlace.name);
+  
+      if (!alreadyExists) {
+        const newPoint = new ol.Feature({
+          geometry: new ol.geom.Point(ol.proj.fromLonLat([foundPlace.long, foundPlace.lat])),
+          name: foundPlace.name,
+          attributes: { img: foundPlace.img },
+        });
+        newPoint.setStyle(iconStyle);
+        vectorSource.addFeature(newPoint);
+      }
+  
+      // Fly and show popup
+      flyTo(ol.proj.fromLonLat([foundPlace.long, foundPlace.lat]), () => {
+        flying = false;
+        showPopupForPlace(foundPlace);
+      });
+    } else {
+      // Not found
+      swal({
+        title: "Not Found",
+        text: `No destination found with the name "${query}"`,
+        icon: "error",
+      });
+    }
+  });
+  
+  // allows the user to enter the search instead of clicking on the button
+  document.getElementById("destination").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      document.getElementById("search-homes-button").click();
+    }
+  });
+
 
   // Step 5: Return the element
   return cardDiv;
